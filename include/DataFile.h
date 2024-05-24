@@ -70,8 +70,8 @@ public:
 
             auto z = DataFile::convertComplex(it);
 
-            std::from_chars(z.first.data()), z.first.data() + z.first.size(), real, 10);
-            std::from_chars(z.second.data(), z.second.data() + z.second.size(), imag, 10);
+            std::from_chars(z.first.data(), z.first.data() + z.first.size(), real);
+            std::from_chars(z.second.data(), z.second.data() + z.second.size(), imag);
             data.push_back(std::complex<T> (real, imag));
         }
 

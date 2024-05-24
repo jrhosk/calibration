@@ -5,41 +5,28 @@
 #include <complex>
 #include <DataFile.h>
 
-#include <charconv>
-#include <iomanip>
-#include <iostream>
-
+//
+// Model rho_ij: std::vector <complex> model[N] = 1 + 0.0j
+//
 
 int main(int argc, char *argv[]){
-    /**
+
     std::cout << "Reading test csv" << std::endl;
 
 
-    DataFile datafile = DataFile(R"(C:\Users\17579\Development\c++\Calibration\data\visibilities.csv)", std::ios::in);
+    DataFile datafile = DataFile("/home/mystletainn/Development/c++/calibration/data/visibilities.csv", std::ios::in);
     datafile.ReadCsv();
 
     std::vector<std::complex<float>> vis = datafile.GetColumn<float, std::complex>("vis");
-    //std::vector<std::complex<float>> vis = datafile.GetColumn("vis");
+
+    std::vector<float> antA = datafile.GetColumn<float>("ant_a");
+    std::vector<float> antB = datafile.GetColumn<float>("ant_b");
 
     int index = 0;
     for(auto & it: vis){
-        std::cout << index << ": " << it.real() << ", " << it.imag() << std::endl;
+        std::cout << antA[index] << ", " <<  antB[index] << ": " << it.real() << ", " << it.imag() << std::endl;
         index++;
     }
-    **/
 
-
-#if __cpp_lib_to_chars >= 201611L
-    std::from_chars(s.data(), s.data() + s.size(), value, std::chars_format::general);
-    std::cout << value << std::endl;
-    //std::cout << s.data() << std::endl;
-    //std::cout << s.size() << std::endl;
-#endif
-
-    std::string s = "2.345";
-    float value;
-
-    std::from_chars(s.data(), s.data() + s.size(), value, std::chars_format::general);
-    std::cout << value << std::endl;
 
 }
