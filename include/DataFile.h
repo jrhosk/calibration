@@ -41,6 +41,8 @@ public:
     static std::pair <std::string, std::string> convertComplex(const std::string &);
 
     // Templates
+
+#if __cpp_lib_to_chars >= 201611L
     template <typename T>
     std::vector<T> GetColumn(const char* column){
 
@@ -68,13 +70,54 @@ public:
 
             auto z = DataFile::convertComplex(it);
 
-            std::from_chars(z.first.data(), z.first.data() + z.first.size(), real);
-            std::from_chars(z.second.data(), z.second.data() + z.second.size(), imag);
+            std::from_chars(z.first.data()), z.first.data() + z.first.size(), real, 10);
+            std::from_chars(z.second.data(), z.second.data() + z.second.size(), imag, 10);
             data.push_back(std::complex<T> (real, imag));
         }
 
         return data;
     }
+#endif
+
+#if __cpp_lib_to_chars < 201611L
+
+/**
+    std::vector<float> GetColumn(const char* column) {
+
+        float value;
+        std::vector<float> data;
+
+        for (auto & it : this->pDataFrame[column]) {
+            value = strtof(it.data(), nullptr);
+
+            data.push_back(value);
+        }
+
+        return data;
+
+    }
+**/
+    std::vector<std::complex<float>> GetColumn(const char* column){
+
+        float real;
+        float imag;
+
+        std::vector<std::complex<float>> data;
+
+        for (auto & it : this->pDataFrame[column]) {
+
+            auto z = DataFile::convertComplex(it);
+
+            real = std::strtof(z.first.data(), nullptr);
+            imag = std::strtof(z.second.data(), nullptr);
+            data.push_back(std::complex<float> (real, imag));
+        }
+
+        return data;
+    }
+
+#endif
+
 
 };
 #endif //DATAFILE_H
