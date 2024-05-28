@@ -9,4 +9,7 @@ add_executable(Calibration calibrate.cc
         include/DataFile.h
         src/DataFile.cc
         include/windows_string.h
+        include/CalibrationSolverBase.h
+        include/AntennaSolve.h
+        src/AntennaSolve.cc
 )

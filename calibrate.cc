@@ -3,8 +3,9 @@
 //
 #include <iostream>
 #include <complex>
-#include <DataFile.h>
 
+#include <DataFile.h>
+#include <AntennaSolve.h>
 //
 // Model rho_ij: std::vector <complex> model[N] = 1 + 0.0j
 //
@@ -14,19 +15,11 @@ int main(int argc, char *argv[]){
     std::cout << "Reading test csv" << std::endl;
 
 
-    DataFile datafile = DataFile("/home/mystletainn/Development/c++/calibration/data/visibilities.csv", std::ios::in);
-    datafile.ReadCsv();
+    DataFile visfile = DataFile("/home/mystletainn/Development/c++/calibration/data/visibilities.csv", std::ios::in);
+    visfile.ReadCsv();
 
-    std::vector<std::complex<float>> vis = datafile.GetColumn<float, std::complex>("vis");
+    std::vector<std::complex<float>> vis = visfile.GetColumn<float, std::complex>("vis");
 
-    std::vector<float> antA = datafile.GetColumn<float>("ant_a");
-    std::vector<float> antB = datafile.GetColumn<float>("ant_b");
-
-    int index = 0;
-    for(auto & it: vis){
-        std::cout << antA[index] << ", " <<  antB[index] << ": " << it.real() << ", " << it.imag() << std::endl;
-        index++;
-    }
 
 
 }
