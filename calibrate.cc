@@ -20,6 +20,9 @@ int main(int argc, char *argv[]){
 
     std::vector<std::complex<float>> vis = visfile.GetColumn<float, std::complex>("vis");
 
+    AntennaSolve solver = AntennaSolve();
 
-
+    solver.SetVis(vis);
+    solver.Transform();
+    solver.Fit(500, 0.1);
 }

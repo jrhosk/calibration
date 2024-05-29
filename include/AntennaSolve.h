@@ -13,6 +13,9 @@
 class AntennaSolve: CalibrationSolverBase {
 
 public:
+    void SetVis(std::vector<std::complex<float>>);
+    void SetGains(std::vector<std::complex<float>>);
+
     void Transform() override;
     void Fit(int n_batch, float step) override;
 
