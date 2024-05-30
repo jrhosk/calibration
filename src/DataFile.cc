@@ -22,18 +22,18 @@ void DataFile::ReadCsv(const char *delimiter) {
         char *c_line = new char[line.length() + 1];
         strcpy(c_line, line.c_str());
         if (!fHeaderRead){
-            DataFile::pParseHeader(c_line, delimiter);
+            DataFile::ParseHeader(c_line, delimiter);
 
             fHeaderRead=true;
         } else {
-            DataFile::pParseRow(c_line, delimiter);
+            DataFile::ParseRow(c_line, delimiter);
         }
 
     }
 
 }
 
- void DataFile::pParseRow(char *line, const char *delimiter=",") {
+ void DataFile::ParseRow(char *line, const char *delimiter=",") {
     char *data;
     char *pnt = line;
     std::string key;
@@ -41,22 +41,22 @@ void DataFile::ReadCsv(const char *delimiter) {
 
     while((data = strsep(&pnt, delimiter)) != nullptr) {
         key = this->pColumns[columnNumber];
-        this->pDataFrame[key].push_back(data);
+        this->dataframe[key].push_back(data);
         columnNumber++;
     }
 }
 
-void DataFile::pParseHeader(char *line, const char *delimiter=",") {
+void DataFile::ParseHeader(char *line, const char *delimiter=",") {
     char *header;
     char *pnt = line;
 
     while((header = strsep(&pnt, delimiter)) != nullptr) {
-        this->pDataFrame[std::string(header)] = std::vector<std::string>();
+        this->dataframe[std::string(header)] = std::vector<std::string>();
         this->pColumns.emplace_back(header);
     }
 }
 
-std::pair <std::string, std::string> DataFile::convertComplex(const std::string& cnumber){
+std::pair <std::string, std::string> DataFile::ConvertComplex(const std::string& cnumber){
     std::size_t rPositivePosition = std::string::npos;
     std::size_t lPositivePosition = std::string::npos;
 
@@ -112,14 +112,14 @@ std::pair <std::string, std::string> DataFile::convertComplex(const std::string&
     return std::pair<std::string, std::string>{realString, imaginaryString};
 }
 
-void DataFile::PrintKeys(){
+void DataFile::PrintKeys() const{
     for (auto & it : this->pColumns){
         std::cout << "key: " << it << std::endl;
     }
 }
 
-void DataFile::PrintDataFrame(){
-    for (auto & it : this->pDataFrame){
+void DataFile::PrintDataFrame() const{
+    for (auto & it : this->dataframe){
         std::cout << "key: " << it.first << ": " << it.second.front() << std::endl;
     }
 }

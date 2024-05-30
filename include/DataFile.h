@@ -13,15 +13,15 @@
 #include <charconv>
 
 class DataFile: private std::fstream {
-private:
-    std::unordered_map<std::string, std::vector<std::string>> pDataFrame;
+
+public:
+    std::unordered_map<std::string, std::vector<std::string>> dataframe;
 
     std::vector<std::string> pColumns;
 
-    void pParseRow(char *, const char *);
-    void pParseHeader(char *, const char *);
+    void ParseRow(char *, const char *);
+    void ParseHeader(char *, const char *);
 
-public:
     explicit DataFile(const char *filename, const ios_base::openmode mode = ios_base::in | ios_base::out): std::fstream(filename, mode) {
         if( good() ){
             std::cout << "Opening file: " << filename<< std::endl;
@@ -35,10 +35,10 @@ public:
     ~DataFile() override{close();}
 
     void ReadCsv(const char * delimiter = ",");
-    void PrintKeys();
-    void PrintDataFrame();
+    void PrintKeys() const;
+    void PrintDataFrame() const;
 
-    static std::pair <std::string, std::string> convertComplex(const std::string &);
+    static std::pair <std::string, std::string> ConvertComplex(const std::string &);
 
     // Templates
 
@@ -49,7 +49,7 @@ public:
         T value;
         std::vector<T> data;
 
-        for (auto & it : this->pDataFrame[column]) {
+        for (auto & it : this->dataframe[column]) {
             const auto resp = std::from_chars(it.data(), it.data() + it.size(), value);
             data.push_back(value);
         }
@@ -66,9 +66,9 @@ public:
 
         std::vector<std::complex<T>> data;
 
-        for (auto & it : this->pDataFrame[column]) {
+        for (auto & it : this->dataframe[column]) {
 
-            auto z = DataFile::convertComplex(it);
+            auto z = DataFile::ConvertComplex(it);
 
             std::from_chars(z.first.data(), z.first.data() + z.first.size(), real);
             std::from_chars(z.second.data(), z.second.data() + z.second.size(), imag);
@@ -104,9 +104,9 @@ public:
 
         std::vector<std::complex<float>> data;
 
-        for (auto & it : this->pDataFrame[column]) {
+        for (auto & it : this->dataframe[column]) {
 
-            auto z = DataFile::convertComplex(it);
+            auto z = DataFile::ConvertComplex(it);
 
             real = std::strtof(z.first.data(), nullptr);
             imag = std::strtof(z.second.data(), nullptr);

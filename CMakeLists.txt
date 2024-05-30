@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.28)
 project(Calibration)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 
 include_directories(include)
 
@@ -12,4 +12,5 @@ add_executable(Calibration calibrate.cc
         include/CalibrationSolverBase.h
         include/AntennaSolve.h
         src/AntennaSolve.cc
+        include/CalibrationSolverBase.h
 )
