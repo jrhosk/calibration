@@ -21,6 +21,10 @@ void AntennaSolve::SetGains(std::vector<std::complex<float>> gains){
     this->pGainsArray = std::move(gains);
 }
 
+void AntennaSolve::Step() {
+    return;
+}
+
 void AntennaSolve::Transform() {
     std::cout << "transform: AntennaSolve()" << std::endl;
 
@@ -92,7 +96,6 @@ void AntennaSolve::Fit(int n_batch, float step){
         t_gain_0 = this->pGainsArray[0];
 
 
-
         t_diff_1 = this->Loss(vis_mean[0], this->pGainsArray[0]);
         t_gain_1 = this->pGainsArray[1];
 
@@ -101,10 +104,6 @@ void AntennaSolve::Fit(int n_batch, float step){
 
         std::cout << "Batch: " << b << "\tgain[0]: " << norm(this->pGainsArray[0]) << "\tdiff: " << t_diff_0 << std::endl;
         std::cout << "Batch: " << b << "\tgain[1]: " << norm(this->pGainsArray[1]) << "\tdiff: " << t_diff_1 << std::endl;
-
-        //if(b % 10 == 0) std::cout << "Batch: " << b << "\tgain: " << this->pGainsArray[0].real() << " + " << this->pGainsArray[0].imag() << "i" << std::endl;
-        //if(b % 50 == 0) std::cout << "Batch: " << b << "\tgain: " << this->pGainsArray[0].real() << " + " << this->pGainsArray[0].imag() << "i\t"  << t_diff << std::endl;
-        //if(b % 500 == 0) std::cout << "Batch: " << b << "\tgain: " << norm(this->pGainsArray[0]) << " " << t_diff << std::endl;
 
         if(abs(t_diff_0) < 0.01) break;
     }

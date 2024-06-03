@@ -20,12 +20,14 @@ public:
     ~AntennaSolve();
 
     std::vector<std::complex<float>> GetGains();
+
     void SetVis(std::vector<std::complex<float>>);
     void SetGains(std::vector<std::complex<float>>);
 
     std::complex<float> Loss(const std::complex<float> &, const std::complex<float> &) override;
 
     void Transform() override;
+    void Step() override;
     void Fit(int n_batch, float step) override;
 
 };

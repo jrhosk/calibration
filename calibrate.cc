@@ -50,11 +50,27 @@ namespace data{
             return std::complex<T> {0., 0.};
 
         }
+
+        std::complex<T> stdev() {
+            if(!data.empty()) {
+                std::complex<T> std = {0., 0.};
+                std::complex<T> mean = this->mean();
+                std::complex<T> N = this->data.size();
+
+                for(auto & it : this->data) {
+                    std += pow(it - mean, 2);
+                    //++N;
+                }
+                return sqrt(std / N);
+            }
+            return std::complex<T> {0., 0.};
+
+        }
     };
 };
 
 int main(int argc, char *argv[]){
-/**
+
     std::cout << "Reading test csv" << std::endl;
 
 
@@ -77,8 +93,8 @@ int main(int argc, char *argv[]){
 
     std::vector<std::complex<float>> gains = gainsfile.GetColumn("gains");
     std::cout <<  "truth: " << abs(gains[0]) << std::endl;
-    **/
 
+    /**
     data::column<float, std::complex> d_column;
     d_column.data = std::vector <std::complex<float>> {
         std::complex<float>{3., 2.},
@@ -86,5 +102,6 @@ int main(int argc, char *argv[]){
         std::complex<float>{1., 4.}
     };
 
-    std::cout << "mean: " << d_column.mean() << std::endl;
+    std::cout << "Statistics: " << d_column.mean() << " +- " << d_column.stdev() << std::endl;
+    **/
 }
