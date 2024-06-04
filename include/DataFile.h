@@ -42,7 +42,7 @@ public:
 
     // Templates
 
-#if __cpp_lib_to_chars >= 201611L
+//#if __cpp_lib_to_chars >= 201611L
     template <typename T>
     std::vector<T> GetColumn(const char* column){
 
@@ -77,17 +77,17 @@ public:
 
         return data;
     }
-#endif
-
+//#endif
+/**
 #if __cpp_lib_to_chars < 201611L
 
 /**
-    std::vector<float> GetColumn(const char* column) {
+    std::vector<int> GetColumn(const char* column) {
 
-        float value;
-        std::vector<float> data;
+        int value;
+        std::vector<int> data;
 
-        for (auto & it : this->pDataFrame[column]) {
+        for (auto & it : this->dataframe[column]) {
             value = strtof(it.data(), nullptr);
 
             data.push_back(value);
@@ -97,6 +97,7 @@ public:
 
     }
 **/
+    /**
     std::vector<std::complex<float>> GetColumn(const char* column){
 
         float real;
@@ -117,7 +118,7 @@ public:
     }
 
 #endif
-
+**/
 
 };
 #endif //DATAFILE_H

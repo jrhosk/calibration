@@ -72,31 +72,32 @@ void AntennaSolve::Fit(int n_batch, float step){
 
     std::complex<float> t_vis = {0.0, 0.0};
 
-    std::vector<std::complex<float>> vis_mean;
+    //std::vector<std::complex<float>> vis_mean;
 
 
     std::cout << "fit: AntennaSolve()" << std::endl;
-    float N = 100.0;
+    //float N = 100.0;
 
     // Calculate average values
-    for (size_t i = 0; i < 2; i++) {
-        t_vis = {0.0, 0.0};
-        for( size_t j = 0; j < 100; j++){
-            t_vis += this->pObservedArray[100*i + j];
-        }
+    //for (size_t i = 0; i < 2; i++) {
+    //    t_vis = {0.0, 0.0};
+    //    for( size_t j = 0; j < 100; j++){
+    //        t_vis += this->pObservedArray[100*i + j];
+    //    }
 
-        t_vis /= N;
-        vis_mean.push_back(t_vis);
-    }
+    //    t_vis /= N;
+    //    vis_mean.push_back(t_vis);
+    //}
+
     //for( size_t k = 0; k < 10; k++) std::cout << vis_mean[k] << std::endl;
     //for (size_t i = 0; i < this->pModelArray.size(); i++){
     for(size_t b = 0; b < n_batch; b++) {
 
-        t_diff_0 = this->Loss(vis_mean[0], this->pGainsArray[1]);
+        t_diff_0 = this->Loss(this->pObservedArray[0], this->pGainsArray[1]);
         t_gain_0 = this->pGainsArray[0];
 
 
-        t_diff_1 = this->Loss(vis_mean[0], this->pGainsArray[0]);
+        t_diff_1 = this->Loss(this->pObservedArray[0], this->pGainsArray[0]);
         t_gain_1 = this->pGainsArray[1];
 
         this->pGainsArray[0] = t_gain_0 + step*t_diff_0;

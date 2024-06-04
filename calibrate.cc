@@ -6,6 +6,12 @@
 
 #include <DataFile.h>
 #include <AntennaSolve.h>
+
+#include <boost/numeric/ublas/io.hpp>
+#include <boost/numeric/ublas/matrix.hpp>
+#include <boost/numeric/ublas/triangular.hpp>
+
+
 //
 // Model rho_ij: std::vector <complex> model[N] = 1 + 0.0j
 //
@@ -70,6 +76,29 @@ namespace data{
 };
 
 int main(int argc, char *argv[]){
+/**
+    boost::numeric::ublas::vector<std::complex<double>> v (3);
+    for (unsigned i = 0; i < v.size (); ++ i) {
+        v (i) = std::complex<double>(2., 1.);
+    }
+
+    std::cout << v << std::endl;
+
+    boost::numeric::ublas::vector<std::complex<double>> n (3);
+
+    boost::numeric::ublas::triangular_matrix<std::complex<double>, boost::numeric::ublas::upper> mu (3, 3);
+    for (unsigned i = 0; i < mu.size1 (); ++ i) {
+        for (unsigned j = i; j < mu.size2 (); ++ j) {
+            mu (i, j) = std::complex<double> (i + j, + 1.);
+        }
+    }
+
+    std::cout << mu.size1() << " " << mu.size2() << " " << mu << std::endl;
+
+    n = boost::numeric::ublas::prod(mu, v);
+    std::cout << n << std::endl;
+    **/
+
 
     std::cout << "Reading test csv" << std::endl;
 
@@ -77,12 +106,32 @@ int main(int argc, char *argv[]){
     DataFile visfile = DataFile("/users/jhoskins/fornax/Development/c++/calibration/data/visibilities.csv", std::ios::in);
     visfile.ReadCsv();
 
-    //std::vector<std::complex<float>> vis = visfile.GetColumn<float, std::complex>("vis");
-    std::vector<std::complex<float>> vis = visfile.GetColumn("vis");
+    std::vector<std::complex<float>> vis = visfile.GetColumn<float, std::complex>("vis");
+    //std::vector<std::complex<float>> vis = visfile.GetColumn("vis");
+
+    //std::vector<int> ant_a = visfile.GetColumn("ant_a");
+    //std::vector<int> ant_b = visfile.GetColumn("ant_b");
+
+    std::complex<float> t_vis = {0.0, 0.0};
+/**
+    std::vector<std::complex<float>> mean_vis;
+
+    const float N = 100.;
+
+    // Calculate means
+    for (size_t i = 0; i < 2; i++) {
+        t_vis = {0.0, 0.0};
+        for( size_t j = 0; j < 100; j++){
+            t_vis += vis[100*i + j];
+        }
+
+        t_vis /= N;
+        mean_vis.push_back(t_vis);
+    }
 
     AntennaSolve solver = AntennaSolve();
 
-    solver.SetVis(vis);
+    solver.SetVis(mean_vis);
     solver.Transform();
     solver.Fit(1000, 0.1);
 

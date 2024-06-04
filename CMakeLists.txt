@@ -3,7 +3,7 @@ project(Calibration)
 
 set(CMAKE_CXX_STANDARD 17)
 
-include_directories(include)
+include_directories(include /usr/local/boost_1_85_0)
 
 add_executable(Calibration calibrate.cc
         include/DataFile.h
