@@ -110,58 +110,47 @@ int main(int argc, char *argv[]){
     std::vector<int> ant_a = visfile.GetColumn<int>("ant_a");
     std::vector<int> ant_b = visfile.GetColumn<int>("ant_b");
 
+
+    //std::complex <double> t_mean {0., 0.};
+    //for(unsigned i = 0; i < 100; i++){
+    //    t_mean += vis[i];
+    //}
+
+    //std::cout << t_mean/100. << std::endl;
+
+    // Preprocessing
     const unsigned size = vis.size();
 
-    boost::numeric::ublas::triangular_matrix<std::complex<double>, boost::numeric::ublas::upper> X (size, size);
-    for (unsigned i = 0; i < X.size1 (); ++ i) {
+    boost::numeric::ublas::triangular_matrix<std::complex<double>, boost::numeric::ublas::upper> X (10, 10);
+    for (unsigned i = 0; i < size; ++ i) {
         int m = ant_a[i];
         int n = ant_b[i];
 
         X (m, n) = X (m, n) + vis[i];
-        //X (m, n) /=100.;
-
     }
+
     X /= 100.;
 
-    std::cout << X(0, 1).real() << " " << X(0, 1).imag() << std::endl;
 
+    //std::cout << X(0, 1) << std::endl;
 
-    //for( auto & it: vis){
-    //    std::cout << it.real() << " " << it.imag() << std::endl;
-    //}
-    //std::vector<std::complex<float>> vis = visfile.GetColumn("vis");
+    boost::numeric::ublas::scalar_matrix<std::complex<double>> s (3, 3, std::complex<double> {1., 1.});
+    //std::cout << "Scalar matrix:\n" << s << std::endl;
 
+    AntennaSolve solver = AntennaSolve(X);
 
-    //std::complex<float> t_vis = {0.0, 0.0};
-/**
-    std::vector<std::complex<float>> mean_vis;
+    //solver.SetVis(mean_vis);
+    //solver.Transform();
 
-    const float N = 100.;
+    solver.Fit(100, 0.1);
 
-    // Calculate means
-    for (size_t i = 0; i < 2; i++) {
-        t_vis = {0.0, 0.0};
-        for( size_t j = 0; j < 100; j++){
-            t_vis += vis[100*i + j];
-        }
+    //std::cout << "calculated: " << abs(solver.GetGains()[0]) << std::endl;
 
-        t_vis /= N;
-        mean_vis.push_back(t_vis);
-    }
+    //DataFile gainsfile = DataFile("/users/jhoskins/fornax/Development/c++/calibration/data/gains.csv", std::ios::in);
+    //gainsfile.ReadCsv();
 
-    AntennaSolve solver = AntennaSolve();
-
-    solver.SetVis(mean_vis);
-    solver.Transform();
-    solver.Fit(1000, 0.1);
-
-    std::cout << "calculated: " << abs(solver.GetGains()[0]) << std::endl;
-
-    DataFile gainsfile = DataFile("/users/jhoskins/fornax/Development/c++/calibration/data/gains.csv", std::ios::in);
-    gainsfile.ReadCsv();
-
-    std::vector<std::complex<float>> gains = gainsfile.GetColumn("gains");
-    std::cout <<  "truth: " << abs(gains[0]) << std::endl;
+    //std::vector<std::complex<float>> gains = gainsfile.GetColumn("gains");
+    //std::cout <<  "truth: " << abs(gains[0]) << std::endl;
 
     /**
     data::column<float, std::complex> d_column;
@@ -172,5 +161,5 @@ int main(int argc, char *argv[]){
     };
 
     std::cout << "Statistics: " << d_column.mean() << " +- " << d_column.stdev() << std::endl;
-    **/
+**/
 }

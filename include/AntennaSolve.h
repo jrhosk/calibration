@@ -8,27 +8,34 @@
 #include <complex>
 #include <vector>
 
+#include <boost/numeric/ublas/triangular.hpp>
+
 #include "CalibrationSolverBase.h"
 
 class AntennaSolve: public CalibrationSolverBase {
 protected:
-    std::vector<std::complex<float>> pModelArray;
-    std::vector<std::complex<float>> pGainsArray;
-    std::vector<std::complex<float>> pObservedArray;
+
+    boost::numeric::ublas::vector<std::complex<double>> pGainsArray;
+    boost::numeric::ublas::vector<std::complex<double>> loss;
+
+    boost::numeric::ublas::scalar_matrix<std::complex<double>> pModelArray;
+
+    boost::numeric::ublas::triangular_matrix<std::complex<double>, boost::numeric::ublas::upper> pObservedArray;
 
 public:
+    explicit AntennaSolve(boost::numeric::ublas::triangular_matrix<std::complex<double>, boost::numeric::ublas::upper> &);
     ~AntennaSolve();
 
-    std::vector<std::complex<float>> GetGains();
+    boost::numeric::ublas::vector<std::complex<double>> GetGains();
 
-    void SetVis(std::vector<std::complex<float>>);
-    void SetGains(std::vector<std::complex<float>>);
+    void SetVis(boost::numeric::ublas::triangular_matrix<std::complex<double>, boost::numeric::ublas::upper> &);
+    //void SetGains(std::vector<std::complex<float>>);
 
-    std::complex<float> Loss(const std::complex<float> &, const std::complex<float> &) override;
+    boost::numeric::ublas::vector<std::complex<double>> Loss() override;
 
     void Transform() override;
-    void Step() override;
-    void Fit(int n_batch, float step) override;
+    void Step(double alpha) override;
+    void Fit(int n_batch, double alpha) override;
 
 };
 
