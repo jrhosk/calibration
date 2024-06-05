@@ -103,16 +103,36 @@ int main(int argc, char *argv[]){
     std::cout << "Reading test csv" << std::endl;
 
 
-    DataFile visfile = DataFile("/users/jhoskins/fornax/Development/c++/calibration/data/visibilities.csv", std::ios::in);
+    DataFile visfile = DataFile("/home/mystletainn/Development/c++/calibration/data/visibilities.csv", std::ios::in);
     visfile.ReadCsv();
 
-    std::vector<std::complex<float>> vis = visfile.GetColumn<float, std::complex>("vis");
+    std::vector<std::complex<double>> vis = visfile.GetColumn<double, std::complex>("vis");
+    std::vector<int> ant_a = visfile.GetColumn<int>("ant_a");
+    std::vector<int> ant_b = visfile.GetColumn<int>("ant_b");
+
+    const unsigned size = vis.size();
+
+    boost::numeric::ublas::triangular_matrix<std::complex<double>, boost::numeric::ublas::upper> X (size, size);
+    for (unsigned i = 0; i < X.size1 (); ++ i) {
+        int m = ant_a[i];
+        int n = ant_b[i];
+
+        X (m, n) = X (m, n) + vis[i];
+        //X (m, n) /=100.;
+
+    }
+    X /= 100.;
+
+    std::cout << X(0, 1).real() << " " << X(0, 1).imag() << std::endl;
+
+
+    //for( auto & it: vis){
+    //    std::cout << it.real() << " " << it.imag() << std::endl;
+    //}
     //std::vector<std::complex<float>> vis = visfile.GetColumn("vis");
 
-    //std::vector<int> ant_a = visfile.GetColumn("ant_a");
-    //std::vector<int> ant_b = visfile.GetColumn("ant_b");
 
-    std::complex<float> t_vis = {0.0, 0.0};
+    //std::complex<float> t_vis = {0.0, 0.0};
 /**
     std::vector<std::complex<float>> mean_vis;
 
