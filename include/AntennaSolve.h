@@ -8,7 +8,9 @@
 #include <complex>
 #include <vector>
 
-#include <boost/numeric/ublas/triangular.hpp>
+//#include <boost/numeric/ublas/triangular.hpp>
+#include <boost/numeric/ublas/matrix.hpp>
+#include <boost/numeric/ublas/vector.hpp>
 
 #include "CalibrationSolverBase.h"
 
@@ -18,17 +20,20 @@ protected:
     boost::numeric::ublas::vector<std::complex<double>> pGainsArray;
     boost::numeric::ublas::vector<std::complex<double>> loss;
 
-    boost::numeric::ublas::scalar_matrix<std::complex<double>> pModelArray;
+    //boost::numeric::ublas::scalar_matrix<std::complex<double>> pModelArray;
+    boost::numeric::ublas::matrix<std::complex<double>> pModelArray;
 
-    boost::numeric::ublas::triangular_matrix<std::complex<double>, boost::numeric::ublas::upper> pObservedArray;
+    //boost::numeric::ublas::triangular_matrix<std::complex<double>, boost::numeric::ublas::upper> pObservedArray;
+    boost::numeric::ublas::matrix<std::complex<double>> pObservedArray;
 
 public:
-    explicit AntennaSolve(boost::numeric::ublas::triangular_matrix<std::complex<double>, boost::numeric::ublas::upper> &);
+    //explicit AntennaSolve(boost::numeric::ublas::triangular_matrix<std::complex<double>, boost::numeric::ublas::upper> &);
+    explicit AntennaSolve(boost::numeric::ublas::matrix<std::complex<double>> &);
     ~AntennaSolve();
 
     boost::numeric::ublas::vector<std::complex<double>> GetGains();
 
-    void SetVis(boost::numeric::ublas::triangular_matrix<std::complex<double>, boost::numeric::ublas::upper> &);
+    void SetVis(boost::numeric::ublas::matrix<std::complex<double>> &);
     //void SetGains(std::vector<std::complex<float>>);
 
     boost::numeric::ublas::vector<std::complex<double>> Loss() override;

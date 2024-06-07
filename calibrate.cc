@@ -10,6 +10,7 @@
 #include <boost/numeric/ublas/io.hpp>
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/triangular.hpp>
+#include <iomanip>
 
 
 //
@@ -116,25 +117,52 @@ int main(int argc, char *argv[]){
     //    t_mean += vis[i];
     //}
 
-    //std::cout << t_mean/100. << std::endl;
+    //std::cout << "True average: " <<  t_mean/100. << std::endl;
 
     // Preprocessing
     const unsigned size = vis.size();
 
-    boost::numeric::ublas::triangular_matrix<std::complex<double>, boost::numeric::ublas::upper> X (10, 10);
+
+    //boost::numeric::ublas::matrix<std::complex<double>> X (10, 10);
+    //boost::numeric::ublas::triangular_matrix<std::complex<double>, boost::numeric::ublas::upper> X (10, 10);
+    //for (unsigned i = 0; i < size; ++ i) {
+    //    int m = ant_a[i];
+    //    int n = ant_b[i];
+
+    //    X (m, n) = X (m, n) + vis[i];
+    //}
+
+    //X /= 100.;
+
+    //std::cout << X (0, 1) << std::endl;
+
+    //boost::numeric::ublas::triangular_matrix<std::complex<double>, boost::numeric::ublas::upper> X (10, 10);
+
+    boost::numeric::ublas::matrix<std::complex<double>> X (10, 10);
+
+    // Initialize zero
+    for(unsigned i = 0; i < 10; i++) {
+        for (unsigned j = 0; j < 10; j++) {
+            X(i, j) = std::complex<double> {0., 0.};
+        }
+    }
+
     for (unsigned i = 0; i < size; ++ i) {
         int m = ant_a[i];
         int n = ant_b[i];
 
+
         X (m, n) = X (m, n) + vis[i];
+        X (n, m) = conj(X (m, n));
     }
 
     X /= 100.;
 
+    //std::cout << X(0, 3) << std::endl;
+    //std::cout << X(3, 0) << std::endl;
 
-    //std::cout << X(0, 1) << std::endl;
 
-    boost::numeric::ublas::scalar_matrix<std::complex<double>> s (3, 3, std::complex<double> {1., 1.});
+    //boost::numeric::ublas::scalar_matrix<std::complex<double>> s (3, 3, std::complex<double> {1., 0.1});
     //std::cout << "Scalar matrix:\n" << s << std::endl;
 
     AntennaSolve solver = AntennaSolve(X);
@@ -144,13 +172,27 @@ int main(int argc, char *argv[]){
 
     solver.Fit(100, 0.1);
 
-    //std::cout << "calculated: " << abs(solver.GetGains()[0]) << std::endl;
+/**
+    for(unsigned i = 0; i < 10; i++){
+        std::cout << "| ";
+        for(unsigned j = 0; j < 10; j++) {
+            if(i==j){
+                std::cout << std::right << std::setw(15) << "\x1B[31m" <<  X(i, j).imag() << "\x1B[0m" << "\t";
+            }else {
+                std::cout << std::right << std::setw(15) << X(i, j).imag() << "\t";
+            }
+        }
+        std::cout << "  |" << std::endl;
+    }
+**/
 
-    //DataFile gainsfile = DataFile("/users/jhoskins/fornax/Development/c++/calibration/data/gains.csv", std::ios::in);
-    //gainsfile.ReadCsv();
+    DataFile gainsfile = DataFile("/home/mystletainn/Development/c++/calibration/data/gains.csv", std::ios::in);
+    gainsfile.ReadCsv();
 
-    //std::vector<std::complex<float>> gains = gainsfile.GetColumn("gains");
-    //std::cout <<  "truth: " << abs(gains[0]) << std::endl;
+    //std::vector<std::complex<double>> gains = gainsfile.GetColumn("gains");
+    std::vector<std::complex<double>> gains = gainsfile.GetColumn<double, std::complex>("gains");
+
+    for( unsigned i = 0; i < 10; i++) std::cout << "calculated: " << abs(solver.GetGains()[i]) <<  "\ttruth: " << abs(gains[i]) << std::endl;
 
     /**
     data::column<float, std::complex> d_column;
