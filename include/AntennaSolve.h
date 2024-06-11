@@ -20,14 +20,10 @@ protected:
     boost::numeric::ublas::vector<std::complex<double>> pGainsArray;
     boost::numeric::ublas::vector<std::complex<double>> loss;
 
-    //boost::numeric::ublas::scalar_matrix<std::complex<double>> pModelArray;
     boost::numeric::ublas::matrix<std::complex<double>> pModelArray;
-
-    //boost::numeric::ublas::triangular_matrix<std::complex<double>, boost::numeric::ublas::upper> pObservedArray;
     boost::numeric::ublas::matrix<std::complex<double>> pObservedArray;
 
 public:
-    //explicit AntennaSolve(boost::numeric::ublas::triangular_matrix<std::complex<double>, boost::numeric::ublas::upper> &);
     explicit AntennaSolve(boost::numeric::ublas::matrix<std::complex<double>> &);
     ~AntennaSolve();
 
