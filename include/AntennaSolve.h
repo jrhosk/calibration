@@ -8,7 +8,7 @@
 #include <complex>
 #include <vector>
 
-//#include <boost/numeric/ublas/triangular.hpp>
+
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/vector.hpp>
 
@@ -24,13 +24,12 @@ protected:
     boost::numeric::ublas::matrix<std::complex<double>> pObservedArray;
 
 public:
-    explicit AntennaSolve(boost::numeric::ublas::matrix<std::complex<double>> &);
+    explicit AntennaSolve(const boost::numeric::ublas::matrix<std::complex<double>> &);
     ~AntennaSolve();
 
     boost::numeric::ublas::vector<std::complex<double>> GetGains();
 
     void SetVis(boost::numeric::ublas::matrix<std::complex<double>> &);
-    //void SetGains(std::vector<std::complex<float>>);
 
     boost::numeric::ublas::vector<std::complex<double>> Loss() override;
 

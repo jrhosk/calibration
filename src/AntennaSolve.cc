@@ -6,8 +6,10 @@
 
 #include "AntennaSolve.h"
 
-AntennaSolve::AntennaSolve(boost::numeric::ublas::matrix<std::complex<double>> & vis) {
-    this->pObservedArray = boost::numeric::ublas::matrix<std::complex<double>>(vis);
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-builtins"
+AntennaSolve::AntennaSolve(const boost::numeric::ublas::matrix<std::complex<double>> & vis) {
+    this->pObservedArray = boost::numeric::ublas::matrix(vis);
 
     const unsigned size = this->pObservedArray.size1();
 
@@ -22,6 +24,7 @@ AntennaSolve::AntennaSolve(boost::numeric::ublas::matrix<std::complex<double>> &
     }
 
 }
+#pragma clang diagnostic pop
 
 AntennaSolve::~AntennaSolve() = default;
 
@@ -33,10 +36,6 @@ void AntennaSolve::SetVis(boost::numeric::ublas::matrix<std::complex<double>> & 
     this->pObservedArray = vis;
 }
 
-//void AntennaSolve::SetGains(std::vector<std::complex<float>> gains){
-//    this->pGainsArray = std::move(gains);
-//}
-
 void AntennaSolve::Step(double alpha) {
     for(unsigned i = 0; i < this->pGainsArray.size(); i++){
         this->pGainsArray(i) = this->pGainsArray(i) + alpha*this->loss(i);
@@ -45,31 +44,14 @@ void AntennaSolve::Step(double alpha) {
 
 void AntennaSolve::Transform() {
     std::cout << "transform: AntennaSolve()" << std::endl;
-    /**
-    for (size_t i = 0; i < 900; i++){
-        this->pModelArray.push_back(std::complex<float> {1., 0.});
-    }
-
-    for (size_t i = 0; i < 10; i++) {
-        this->pGainsArray.push_back(std::complex<float>{1.0, 0.});
-    }
-     **/
 }
 
 boost::numeric::ublas::vector<std::complex<double>> AntennaSolve::Loss() {
     std::complex<double> numerator;
     std::complex<double> denominator;
 
-    unsigned m = 0;
-    unsigned n = 0;
-
-    unsigned k = 0;
-
-
-    //
-    // constexpr float t_weight = 1/(0.05*0.05);
-    auto t_weight = boost::numeric::ublas::scalar_matrix<std::complex<double>> (10, 10, std::complex<double> {400., 400.});
-    this->loss = boost::numeric::ublas::vector<std::complex<double>> (10);
+    auto t_weight = boost::numeric::ublas::scalar_matrix<std::complex<double>> (this->pModelArray.size1(), this->pModelArray.size2(), std::complex<double> {400., 400.});
+    this->loss = boost::numeric::ublas::vector<std::complex<double>> (this->pGainsArray.size());
 
     for(unsigned i = 0; i < this->pObservedArray.size1(); i++) {
 
