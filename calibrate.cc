@@ -17,27 +17,7 @@
 //
 
 namespace data{
-    /*
-    template <typename T>
-    class column {
-    public:
-        std::vector<T> data;
-
-        T mean() {
-            if(!data.empty()) {
-                T N = 0;
-                T mean = 0;
-                for(auto & it : this->data) {
-                    mean += it;
-                    ++N;
-                }
-                return mean / N;
-            }
-            return 0.0;
-
-        }
-    };
-*/
+   
     void print(boost::numeric::ublas::matrix<std::complex<double>> M){
         const unsigned m = M.size1();
         const unsigned n = M.size2();
@@ -114,10 +94,11 @@ int main(int argc, char *argv[]){
 
     std::cout << "Reading test csv" << std::endl;
 
-
-    DataFile visfile = DataFile("/home/mystletainn/Development/c++/calibration/data/visibilities.csv", std::ios::in);
+    // Pull data from csv, add the directory to visibilities.csv
+    DataFile visfile = DataFile("<path-to>/>visibilities.csv", std::ios::in);
     visfile.ReadCsv();
 
+    // Data can be extracted and cast into most types
     std::vector<std::complex<double>> vis = visfile.GetColumn<double, std::complex>("vis");
     std::vector<int> ant_a = visfile.GetColumn<int>("ant_a");
     std::vector<int> ant_b = visfile.GetColumn<int>("ant_b");
@@ -129,6 +110,7 @@ int main(int argc, char *argv[]){
     boost::numeric::ublas::matrix<std::complex<double>> X (10, 10);
 
     // Initialize zero
+    // * This could be put into a data structure that has teh fill property *
     for(unsigned i = 0; i < 10; i++) {
         for (unsigned j = 0; j < 10; j++) {
             X(i, j) = std::complex<double> {0., 0.};
@@ -152,10 +134,10 @@ int main(int argc, char *argv[]){
 
     data::print(X);
 
-    DataFile gainsfile = DataFile("/home/mystletainn/Development/c++/calibration/data/gains.csv", std::ios::in);
+    // Get the solutions to compare against. Add path to gains.csv if needed.
+    DataFile gainsfile = DataFile("<path-to>/gains.csv", std::ios::in);
     gainsfile.ReadCsv();
 
-    //std::vector<std::complex<double>> gains = gainsfile.GetColumn("gains");
     std::vector<std::complex<double>> gains = gainsfile.GetColumn<double, std::complex>("gains");
 
     for( unsigned i = 0; i < 10; i++) std::cout << std::left << std::setw(15) << "[calculated, truth]: " << abs(solver.GetGains()[i]) <<  "\t" << abs(gains[i]) << std::endl;
