@@ -3,85 +3,91 @@
 //
 
 #include <iostream>
+#include <cmath>
 
 #include "AntennaSolve.h"
+#include <mdspan.hpp>
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-builtins"
-AntennaSolve::AntennaSolve(const boost::numeric::ublas::matrix<std::complex<double>> & vis) {
-    this->pObservedArray = boost::numeric::ublas::matrix(vis);
 
-    const unsigned size = this->pObservedArray.size1();
 
-    this->pGainsArray = boost::numeric::ublas::vector<std::complex<double>>(size);
-    for (unsigned i = 0; i < 10; i++) this->pGainsArray(i) = std::complex<double>{0.1, 0.1};
 
-    this->pModelArray = boost::numeric::ublas::matrix<std::complex<double>>(10, 10);
-    for (unsigned i = 0; i < 10; i++) {
-        for (unsigned j = 0; j < 10; j++) {
-            this->pModelArray(i, j) = std::complex<double>{1., 0.};
-        }
-    }
-
-}
-#pragma clang diagnostic pop
-
-AntennaSolve::~AntennaSolve() = default;
-
-boost::numeric::ublas::vector<std::complex<double>> AntennaSolve::GetGains(){
+/**
+template<typename T, class Extents>
+Kokkos::mdspan <std::complex<T>, Extents> AntennaSolve<T, Extents>::GetGains(){
     return this->pGainsArray;
 }
 
-void AntennaSolve::SetVis(boost::numeric::ublas::matrix<std::complex<double>> & vis){
-    this->pObservedArray = vis;
-}
+//template <typename T, std::size_t M, std::size_t N>
+//void AntennaSolve<T, M, N>::SetVis(Kokkos::mdspan<std::complex<T>, M> vis){
+//    this->pObservedArray = std::move(vis);
+//}
 
-void AntennaSolve::Step(double alpha) {
+template <typename T, std::size_t M, std::size_t N>
+void AntennaSolve<T, M, N>::Step(T alpha) {
     for(unsigned i = 0; i < this->pGainsArray.size(); i++){
-        this->pGainsArray(i) = this->pGainsArray(i) + alpha*this->loss(i);
+        this->pGainsArray[i] = this->pGainsArray[i] + alpha*this->loss[i];
     }
 }
 
-void AntennaSolve::Transform() {
+template <typename T, std::size_t M, std::size_t N>
+void AntennaSolve<T, M, N>::Transform() {
     std::cout << "transform: AntennaSolve()" << std::endl;
 }
 
-boost::numeric::ublas::vector<std::complex<double>> AntennaSolve::Loss() {
-    std::complex<double> numerator;
-    std::complex<double> denominator;
 
-    auto t_weight = boost::numeric::ublas::scalar_matrix<std::complex<double>> (this->pModelArray.size1(), this->pModelArray.size2(), std::complex<double> {400., 400.});
-    this->loss = boost::numeric::ublas::vector<std::complex<double>> (this->pGainsArray.size());
+template <typename T, std::size_t M, std::size_t N>
+void AntennaSolve<T, M, N>::Loss() {
+    std::complex<T> numerator;
+    std::complex<T> denominator;
 
-    for(unsigned i = 0; i < this->pObservedArray.size1(); i++) {
+    // Create Kokos::mdspan instances of matrices. Naming according to
+    // private array: pModelArray, mds instance: sModelArray
+    auto sModelArray = Kokkos::mdspan(this->pModelArray, N, N);
+    auto sObservedArray = Kokkos::mdspan(this->pObservedArray, N, N);
+
+    // The weight here is set to be the same as in the example
+    auto weight_vector = std::array<std::complex<T>, N*N> (sModelArray.extent(0)*sModelArray.extent(1), std::complex<T> {400., 400.});
+
+    // Create Kokkos::mdspan instance of weights.
+    auto weight_mdspan = Kokkos::mdspan(weight_vector, sModelArray.extent(0), sModelArray.extent(1));
+
+    this->loss = std::array<std::complex<T>, N> ();
+
+    for(unsigned i = 0; i < sObservedArray.extent(0); i++) {
 
         numerator = {0.0, 0.0};
         denominator = {0.0, 0.0};
 
-        for(unsigned j = 0; j < this->pObservedArray.size2(); j++) {
+        for(unsigned j = 0; j < sObservedArray.extent(1); j++) {
 
 
             if (i==j) continue;
 
-            numerator += this->pObservedArray(i, j)*this->pGainsArray(j) * conj(this->pModelArray(i, j)) * t_weight(i, j);
-            denominator += conj(this->pModelArray(i, j)) * (this->pModelArray(i, j)) * conj(this->pGainsArray(j)) * (this->pGainsArray(j))  * t_weight(i, j);
+            numerator += sObservedArray[i, j]*this->pGainsArray[j] * conj(sModelArray[i, j]) * weight_mdspan[i, j];
+            denominator += conj(sModelArray[i, j]) * (sModelArray[i, j]) * conj(this->pGainsArray[j]) * (this->pGainsArray[j])  * weight_mdspan[i, j];
         }
 
-        this->loss(i) = (numerator/denominator) - this->pGainsArray(i);
+        this->loss[i] = (numerator/denominator) - this->pGainsArray[i];
 
     }
-
-    return loss;
 }
 
-void AntennaSolve::Fit(int n_batch, double alpha){
+template <typename T, std::size_t M, std::size_t N>
+void AntennaSolve<T, M, N>::Fit(unsigned n_batch, T alpha){
 
     std::cout << "fit: AntennaSolve()" << std::endl;
 
     for(size_t b = 0; b < n_batch; b++) {
 
+        // Compute the loss
         this->Loss();
+
+        // Take a step
         this->Step(alpha);
 
     }
+
 }
+ **/

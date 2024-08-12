@@ -7,8 +7,7 @@
 #include <DataFile.h>
 #include <AntennaSolve.h>
 
-#include <boost/numeric/ublas/io.hpp>
-#include <boost/numeric/ublas/matrix.hpp>
+#include <mdspan.hpp>
 #include <iomanip>
 
 
@@ -17,10 +16,10 @@
 //
 
 namespace data{
-   
-    void print(boost::numeric::ublas::matrix<std::complex<double>> M){
-        const unsigned m = M.size1();
-        const unsigned n = M.size2();
+    template <typename T, class Extents>
+    void print(Kokkos::mdspan<T, Extents> M) {
+        const unsigned m = M.extent(0);
+        const unsigned n = M.extent(1);
 
         std::cout << "Real Component:" << std::endl;
 
@@ -28,9 +27,9 @@ namespace data{
             std::cout << "| ";
             for(unsigned j = 0; j < n; j++) {
                 if(i==j){
-                    std::cout << std::right << std::setw(15) << "\x1B[31m" <<  M(i, j).imag() << "\x1B[0m" << "\t";
+                    std::cout << std::right << std::setw(15) << "\x1B[31m" <<  M[i, j].imag() << "\x1B[0m" << "\t";
                 }else {
-                    std::cout << std::right << std::setw(15) << M(i, j).real() << "\t";
+                    std::cout << std::right << std::setw(15) << M[i, j].real() << "\t";
                 }
             }
             std::cout << "  |" << std::endl;
@@ -41,53 +40,14 @@ namespace data{
             std::cout << "| ";
             for(unsigned j = 0; j < n; j++) {
                 if(i==j){
-                    std::cout << std::right << std::setw(15) << "\x1B[31m" <<  M(i, j).imag() << "\x1B[0m" << "\t";
+                    std::cout << std::right << std::setw(15) << "\x1B[31m" <<  M[i, j].imag() << "\x1B[0m" << "\t";
                 }else {
-                    std::cout << std::right << std::setw(15) << M(i, j).imag() << "\t";
+                    std::cout << std::right << std::setw(15) << M[i, j].imag() << "\t";
                 }
             }
             std::cout << "  |" << std::endl;
         }
-
-}
-
-
-
-    template <typename T, template <typename> class complex>
-    class column {
-    public:
-        std::vector<std::complex<T>> data;
-
-        std::complex<T> mean() {
-            if(!data.empty()) {
-                std::complex<T> N = this->data.size();
-                std::complex<T> mean = {0., 0.};
-                for(auto & it : this->data) {
-                    mean += it;
-                    //++N;
-                }
-                return mean / N;
-            }
-            return std::complex<T> {0., 0.};
-
-        }
-
-        std::complex<T> stdev() {
-            if(!data.empty()) {
-                std::complex<T> std = {0., 0.};
-                std::complex<T> mean = this->mean();
-                std::complex<T> N = this->data.size();
-
-                for(auto & it : this->data) {
-                    std += pow(it - mean, 2);
-                    //++N;
-                }
-                return sqrt(std / N);
-            }
-            return std::complex<T> {0., 0.};
-
-        }
-    };
+    }
 };
 
 int main(int argc, char *argv[]){
@@ -95,7 +55,7 @@ int main(int argc, char *argv[]){
     std::cout << "Reading test csv" << std::endl;
 
     // Pull data from csv, add the directory to visibilities.csv
-    DataFile visfile = DataFile("<path-to>/>visibilities.csv", std::ios::in);
+    DataFile visfile = DataFile("/home/mystletainn/Development/c++/calibration/data/visibilities.csv", std::ios::in);
     visfile.ReadCsv();
 
     // Data can be extracted and cast into most types
@@ -103,34 +63,46 @@ int main(int argc, char *argv[]){
     std::vector<int> ant_a = visfile.GetColumn<int>("ant_a");
     std::vector<int> ant_b = visfile.GetColumn<int>("ant_b");
 
-
     // Preprocessing
     const unsigned size = vis.size();
 
-    boost::numeric::ublas::matrix<std::complex<double>> X (10, 10);
+    // Length of unrolled matrix
+    const int m_size = 100;
 
-    // Initialize zero
-    // * This could be put into a data structure that has teh fill property *
-    for(unsigned i = 0; i < 10; i++) {
-        for (unsigned j = 0; j < 10; j++) {
-            X(i, j) = std::complex<double> {0., 0.};
-        }
-    }
+    // Length of array
+    const int a_size = 10;
+
+    std::array<std::complex <double>, m_size> array;
+    array.fill((std::complex<double>{0., 0.}));
+
+    Kokkos::mdspan X = Kokkos::mdspan<std::complex<double>, Kokkos::extents<unsigned int, a_size, a_size>>(array.data(), a_size, a_size);
 
     for (unsigned i = 0; i < size; ++ i) {
+        double count = 1.;
+
         int m = ant_a[i];
         int n = ant_b[i];
 
+        //X[m, n] = X[m, n] + vis[i];
+        //X[n, m] = conj(X[m, n]);
 
-        X (m, n) = X (m, n) + vis[i];
-        X (n, m) = conj(X (m, n));
+        X[m, n] = X[m, n]*(count - 1) + vis[i];
+        X[m, n] = X[m, n]/count;
+
+        X[n, m] = conj(X[m, n]);
+
+        count++;
     }
 
-    X /= 100.;
+    data::print(X);
 
-    AntennaSolve solver = AntennaSolve(X);
+
+
+    auto solver = AntennaSolve<double, 100, 10>(array);
 
     solver.Fit(100, 0.1);
+    //solver.Test();
+
 
     data::print(X);
 
@@ -140,6 +112,6 @@ int main(int argc, char *argv[]){
 
     std::vector<std::complex<double>> gains = gainsfile.GetColumn<double, std::complex>("gains");
 
-    for( unsigned i = 0; i < 10; i++) std::cout << std::left << std::setw(15) << "[calculated, truth]: " << abs(solver.GetGains()[i]) <<  "\t" << abs(gains[i]) << std::endl;
+    //for( unsigned i = 0; i < 10; i++) std::cout << std::left << std::setw(15) << "[calculated, truth]: " << abs(solver.GetGains()[i]) <<  "\t" << abs(gains[i]) << std::endl;
 
 }
