@@ -11,6 +11,5 @@ add_executable(Calibration calibrate.cc
         include/windows_string.h
         include/CalibrationSolverBase.h
         include/AntennaSolve.h
-        src/AntennaSolve.cc
         include/CalibrationSolverBase.h
 )

@@ -7,6 +7,8 @@
 
 #include <complex>
 #include <vector>
+#include <cstring>
+
 #include <mdspan.hpp>
 
 #include "CalibrationSolverBase.h"
@@ -18,39 +20,28 @@ template <typename T, std::size_t M, std::size_t N>
 class AntennaSolve {
 protected:
 
-    //Kokkos::mdspan<std::complex<T>, Kokkos::extents<unsigned int, N, N>> pModelArray;
-    std::array<std::complex<T>, M> pModelArray;
 
-    //Kokkos::mdspan<std::complex<T>, Kokkos::extents<unsigned int, N, N>> pObservedArray;
+    std::array<std::complex<T>, M> pModelArray;
     std::array<std::complex<T>, M> pObservedArray;
 
-    std::array <std::complex<T>, N> pGainsArray;
-
-
     std::array<std::complex<T>, N> loss;
+    std::array <std::complex<T>, N> pGainsArray;
 
 public:
     explicit AntennaSolve(std::array<std::complex<T>, M>);
 
     ~AntennaSolve();
 
-    //template<T, Extents>
-    //Kokkos::mdspan <std::complex<T>, Extents> GetGains();
+    std::array <std::complex<T>, N> GetGains();
 
-    //template<T, Extents>
-    //void SetVis(std::array<std::complex<T>, N>);
+    void Normalize();
+    void Standardize();
 
     void Loss();
-    void Test();
-
-    void Transform();
-
+    void Transform(const char *mode="standardization");
     void Step(T alpha);
     void Fit(unsigned n_batch, T alpha);
 
-    //Kokkos::mdspan<std::complex<T>, Extents> GetGains();
-
-    //void SetVis(Kokkos::mdspan<std::complex<T>, Extents> &vis);
 };
 
 template<typename T, std::size_t M, std::size_t N>
@@ -64,8 +55,6 @@ AntennaSolve<T, M, N>::AntennaSolve(std::array<std::complex<T>, M> vis) {
     // Fill with arrays initial guesses
     this->pGainsArray.fill(std::complex<T>{0.1, 0.1});
     this->pModelArray.fill(std::complex<T>{1., 0.});
-
-
 }
 
 template <typename T, std::size_t M, std::size_t N>
@@ -76,10 +65,80 @@ void AntennaSolve<T, M, N>::Step(T alpha) {
 }
 
 template <typename T, std::size_t M, std::size_t N>
-void AntennaSolve<T, M, N>::Transform() {
-    std::cout << "transform: AntennaSolve()" << std::endl;
+void AntennaSolve<T, M, N>::Normalize() {
+    T min = 0.;
+    T max = 0.;
+
+    // Normalize visibilities
+    auto sModelArray = Kokkos::mdspan(this->pModelArray.data(), N, N);
+
+    // Find extrema
+    for (std::size_t i = 0; i < sModelArray.extent(0); i++) {
+        for (std::size_t j = 0; j < sModelArray.extent(1); j++) {
+            if(sModelArray[i, j] < min) min = sModelArray[i, j];
+            if(sModelArray[i, j] > max) max = sModelArray[i, j];
+        }
+    }
+
+    // Scale data
+    for (std::size_t i = 0; i < sModelArray.extent(0); i++) {
+        for (std::size_t j = 0; j < sModelArray.extent(1); j++) {
+            sModelArray[i, j] = (sModelArray[i, j] - min)/(max - min);
+        }
+    }
 }
 
+template <typename T, std::size_t M, std::size_t N>
+void AntennaSolve<T, M, N>::Standardize() {
+    T mean = 0.;
+    T stdev = 0.;
+    T variance = 0;
+    T n;
+
+    // Standardize visibilities
+    auto sModelArray = Kokkos::mdspan(this->pModelArray.data(), N, N);
+
+    n = sModelArray.extent(0)*sModelArray.extent(1);
+
+    // Calculate mean
+    for (std::size_t i = 0; i < sModelArray.extent(0); i++) {
+        for (std::size_t j = 0; j < sModelArray.extent(1); j++) {
+            mean += sModelArray[i, j];
+        }
+    }
+
+    mean = mean/(n);
+
+    // Calculate square root.
+    for (std::size_t i = 0; i < sModelArray.extent(0); i++) {
+        for (std::size_t j = 0; j < sModelArray.extent(1); j++) {
+            variance += power(sModelArray[i, j] - mean, 2);
+        }
+    }
+
+    stdev = sqrt(variance/(n));
+
+    // Scale data
+    for (std::size_t i = 0; i < sModelArray.extent(0); i++) {
+        for (std::size_t j = 0; j < sModelArray.extent(1); j++) {
+            sModelArray[i, j] = (sModelArray[i, j] - mean)/stdev;
+        }
+    }
+}
+
+template <typename T, std::size_t M, std::size_t N>
+void AntennaSolve<T, M, N>::Transform(const char *mode) {
+    // This function still needs some work. Both scaling functions
+    // need to be made to work with complex numbers.
+    std::cout << "transform: AntennaSolve()" << std::endl;
+
+    if(strcmp(mode, "normalization") == 0){
+        this->Normalize();
+    }
+    else {
+        this->Standardize();
+    }
+}
 
 template <typename T, std::size_t M, std::size_t N>
 void AntennaSolve<T, M, N>::Loss() {
@@ -115,7 +174,6 @@ void AntennaSolve<T, M, N>::Loss() {
         }
 
         this->loss[i] = (numerator/denominator) - this->pGainsArray[i];
-
     }
 }
 
@@ -133,7 +191,11 @@ void AntennaSolve<T, M, N>::Fit(unsigned n_batch, T alpha){
         this->Step(alpha);
 
     }
+}
 
+template<typename T, std::size_t M, std::size_t N>
+std::array <std::complex<T>, N> AntennaSolve<T, M, N>::GetGains(){
+    return this->pGainsArray;
 }
 
 #endif //CALIBRATION_ANTENNASOLVE_H

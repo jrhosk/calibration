@@ -11,7 +11,7 @@ public:
     virtual ~CalibrationSolverBase() = 0;
 
     virtual void Step(T alpha) = 0;
-    virtual void Transform() = 0;
+    virtual void Transform(const char *mode) = 0;
     virtual void Loss() = 0;
     virtual void Fit(unsigned int, T) = 0;
 };

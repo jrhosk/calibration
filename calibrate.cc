@@ -1,6 +1,7 @@
 //
 // Created by jhoskins on 5/22/24.
 //
+#include <iomanip>
 #include <iostream>
 #include <complex>
 
@@ -8,7 +9,6 @@
 #include <AntennaSolve.h>
 
 #include <mdspan.hpp>
-#include <iomanip>
 
 
 //
@@ -83,9 +83,6 @@ int main(int argc, char *argv[]){
         int m = ant_a[i];
         int n = ant_b[i];
 
-        //X[m, n] = X[m, n] + vis[i];
-        //X[n, m] = conj(X[m, n]);
-
         X[m, n] = X[m, n]*(count - 1) + vis[i];
         X[m, n] = X[m, n]/count;
 
@@ -94,24 +91,18 @@ int main(int argc, char *argv[]){
         count++;
     }
 
-    data::print(X);
-
-
-
-    auto solver = AntennaSolve<double, 100, 10>(array);
+    auto solver = AntennaSolve<double, m_size, a_size>(array);
 
     solver.Fit(100, 0.1);
-    //solver.Test();
-
 
     data::print(X);
 
     // Get the solutions to compare against. Add path to gains.csv if needed.
-    DataFile gainsfile = DataFile("<path-to>/gains.csv", std::ios::in);
+    DataFile gainsfile = DataFile("/home/mystletainn/Development/c++/calibration/data/gains.csv", std::ios::in);
     gainsfile.ReadCsv();
 
     std::vector<std::complex<double>> gains = gainsfile.GetColumn<double, std::complex>("gains");
 
-    //for( unsigned i = 0; i < 10; i++) std::cout << std::left << std::setw(15) << "[calculated, truth]: " << abs(solver.GetGains()[i]) <<  "\t" << abs(gains[i]) << std::endl;
+    for( unsigned i = 0; i < 10; i++) std::cout << std::left << std::setw(15) << "[calculated, truth]: " << abs(solver.GetGains()[i]) <<  "\t" << abs(gains[i]) << std::endl;
 
 }
