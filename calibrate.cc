@@ -23,9 +23,9 @@ namespace data{
 
         std::cout << "Real Component:" << std::endl;
 
-        for(unsigned i = 0; i < m; i++){
+        for(std::size_t i = 0; i < m; i++){
             std::cout << "| ";
-            for(unsigned j = 0; j < n; j++) {
+            for(std::size_t j = 0; j < n; j++) {
                 if(i==j){
                     std::cout << std::right << std::setw(15) << "\x1B[31m" <<  M[i, j].imag() << "\x1B[0m" << "\t";
                 }else {
@@ -36,9 +36,9 @@ namespace data{
         }
 
         std::cout << "\n\nImaginary Component:" << std::endl;
-        for(unsigned i = 0; i < m; i++){
+        for(std::size_t i = 0; i < m; i++){
             std::cout << "| ";
-            for(unsigned j = 0; j < n; j++) {
+            for(std::size_t j = 0; j < n; j++) {
                 if(i==j){
                     std::cout << std::right << std::setw(15) << "\x1B[31m" <<  M[i, j].imag() << "\x1B[0m" << "\t";
                 }else {
@@ -103,6 +103,6 @@ int main(int argc, char *argv[]){
 
     std::vector<std::complex<double>> gains = gainsfile.GetColumn<double, std::complex>("gains");
 
-    for( unsigned i = 0; i < 10; i++) std::cout << std::left << std::setw(15) << "[calculated, truth]: " << abs(solver.get_gains()[i]) <<  "\t" << abs(gains[i]) << std::endl;
+    for(std::size_t i = 0; i < 10; i++) std::cout << std::left << std::setw(15) << "[calculated, truth]: " << abs(solver.get_gains()[i]) <<  "\t" << abs(gains[i]) << std::endl;
 
 }

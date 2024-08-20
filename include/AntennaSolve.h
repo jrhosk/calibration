@@ -64,7 +64,7 @@ AntennaSolve<T, M, N>::AntennaSolve(std::array<std::complex<T>, M> vis) {
 
 template <typename T, std::size_t M, std::size_t N>
 void AntennaSolve<T, M, N>::Step(T alpha) {
-    for(unsigned i = 0; i < this->gains_array_.size(); i++){
+    for(std::size_t i = 0; i < this->gains_array_.size(); i++){
         this->gains_array_[i] = this->gains_array_[i] + alpha*this->loss_[i];
     }
 }
@@ -175,12 +175,12 @@ void AntennaSolve<T, M, N>::Loss() {
 
     this->loss_ = std::array<std::complex<T>, N> ();
 
-    for(unsigned i = 0; i < sObservedArray.extent(0); i++) {
+    for(std::size_t i = 0; i < sObservedArray.extent(0); i++) {
 
         numerator = {0.0, 0.0};
         denominator = {0.0, 0.0};
 
-        for(unsigned j = 0; j < sObservedArray.extent(1); j++) {
+        for(std::size_t j = 0; j < sObservedArray.extent(1); j++) {
 
 
             if (i==j) continue;
@@ -198,7 +198,7 @@ void AntennaSolve<T, M, N>::Fit(unsigned n_batch, T alpha){
 
     std::cout << "fit: AntennaSolve()" << std::endl;
 
-    for(size_t b = 0; b < n_batch; b++) {
+    for(std::size_t b = 0; b < n_batch; b++) {
 
         // Compute the loss
         this->Loss();
