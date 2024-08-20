@@ -40,8 +40,8 @@ void DataFile::ReadCsv(const char *delimiter) {
     int columnNumber = 0;
 
     while((data = strsep(&pnt, delimiter)) != nullptr) {
-        key = this->pColumns[columnNumber];
-        this->dataframe[key].push_back(data);
+        key = this->columns_[columnNumber];
+        this->dataframe_[key].push_back(data);
         columnNumber++;
     }
 }
@@ -51,8 +51,8 @@ void DataFile::ParseHeader(char *line, const char *delimiter=",") {
     char *pnt = line;
 
     while((header = strsep(&pnt, delimiter)) != nullptr) {
-        this->dataframe[std::string(header)] = std::vector<std::string>();
-        this->pColumns.emplace_back(header);
+        this->dataframe_[std::string(header)] = std::vector<std::string>();
+        this->columns_.emplace_back(header);
     }
 }
 
@@ -113,13 +113,13 @@ std::pair <std::string, std::string> DataFile::ConvertComplex(const std::string&
 }
 
 void DataFile::PrintKeys() const{
-    for (auto & it : this->pColumns){
+    for (auto & it : this->columns_){
         std::cout << "key: " << it << std::endl;
     }
 }
 
 void DataFile::PrintDataFrame() const{
-    for (auto & it : this->dataframe){
+    for (auto & it : this->dataframe_){
         std::cout << "key: " << it.first << ": " << it.second.front() << std::endl;
     }
 }

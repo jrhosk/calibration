@@ -1,6 +1,11 @@
+// ******************************************************************* //
 //
-// Created by Josh Hoskins on 5/28/24.
+// Created by Joshua Hoskins (jhoskins@nrao.edu) 5/22/24.
 //
+//   Style guide:
+//             https://google.github.io/styleguide/cppguide.html
+//
+// ******************************************************************* //
 
 #ifndef CALIBRATION_ANTENNASOLVE_H
 #define CALIBRATION_ANTENNASOLVE_H
@@ -21,21 +26,21 @@ class AntennaSolve {
 protected:
 
 
-    std::array<std::complex<T>, M> pModelArray;
-    std::array<std::complex<T>, M> pObservedArray;
+    std::array<std::complex<T>, M> model_array_;
+    std::array<std::complex<T>, M> observed_array_;
 
-    std::array<std::complex<T>, N> loss;
-    std::array <std::complex<T>, N> pGainsArray;
+    std::array<std::complex<T>, N> loss_;
+    std::array <std::complex<T>, N> gains_array_;
 
 public:
     explicit AntennaSolve(std::array<std::complex<T>, M>);
 
     ~AntennaSolve();
 
-    std::array <std::complex<T>, N> GetGains();
+    std::array <std::complex<T>, N> get_gains();
 
     void Normalize();
-    void Standardize();
+    //void Standardize();
 
     void Loss();
     void Transform(const char *mode="standardization");
@@ -50,44 +55,54 @@ AntennaSolve<T, M, N>::~AntennaSolve() = default;
 template <typename T, std::size_t M, std::size_t N>
 AntennaSolve<T, M, N>::AntennaSolve(std::array<std::complex<T>, M> vis) {
 
-    this->pObservedArray = std::move(vis);
+    this->observed_array_ = std::move(vis);
 
     // Fill with arrays initial guesses
-    this->pGainsArray.fill(std::complex<T>{0.1, 0.1});
-    this->pModelArray.fill(std::complex<T>{1., 0.});
+    this->gains_array_.fill(std::complex<T>{0.1, 0.1});
+    this->model_array_.fill(std::complex<T>{1., 0.});
 }
 
 template <typename T, std::size_t M, std::size_t N>
 void AntennaSolve<T, M, N>::Step(T alpha) {
-    for(unsigned i = 0; i < this->pGainsArray.size(); i++){
-        this->pGainsArray[i] = this->pGainsArray[i] + alpha*this->loss[i];
+    for(unsigned i = 0; i < this->gains_array_.size(); i++){
+        this->gains_array_[i] = this->gains_array_[i] + alpha*this->loss_[i];
     }
 }
 
 template <typename T, std::size_t M, std::size_t N>
 void AntennaSolve<T, M, N>::Normalize() {
-    T min = 0.;
-    T max = 0.;
+    // This isn't working yet
+    T min_real = 0.;
+    T max_real = 0.;
+
+    T min_imag = 0.;
+    T max_imag = 0.;
 
     // Normalize visibilities
-    auto sModelArray = Kokkos::mdspan(this->pModelArray.data(), N, N);
+    auto model_array = Kokkos::mdspan(this->model_array_.data(), N, N);
 
     // Find extrema
-    for (std::size_t i = 0; i < sModelArray.extent(0); i++) {
-        for (std::size_t j = 0; j < sModelArray.extent(1); j++) {
-            if(sModelArray[i, j] < min) min = sModelArray[i, j];
-            if(sModelArray[i, j] > max) max = sModelArray[i, j];
+    for (std::size_t i = 0; i < model_array.extent(0); i++) {
+        for (std::size_t j = 0; j < model_array.extent(1); j++) {
+            if(model_array[i, j].real() < min_real) min_real = model_array[i, j].real();
+            if(model_array[i, j].real() > max_real) max_real = model_array[i, j].real();
+
+            if(model_array[i, j].imag() < min_real) min_imag = model_array[i, j].imag();
+            if(model_array[i, j].imag() > max_real) max_imag = model_array[i, j].imag();
         }
     }
 
     // Scale data
-    for (std::size_t i = 0; i < sModelArray.extent(0); i++) {
-        for (std::size_t j = 0; j < sModelArray.extent(1); j++) {
-            sModelArray[i, j] = (sModelArray[i, j] - min)/(max - min);
+    for (std::size_t i = 0; i < model_array.extent(0); i++) {
+        for (std::size_t j = 0; j < model_array.extent(1); j++) {
+            std::complex<T> new_value = std::complex<T>( {(model_array[i, j].real() - min_real)/(max_real - min_real), (model_array[i, j].imag() - min_imag)/(max_imag - min_imag)} );
+
+            model_array[i, j] = new_value;
         }
     }
 }
 
+/**
 template <typename T, std::size_t M, std::size_t N>
 void AntennaSolve<T, M, N>::Standardize() {
     T mean = 0.;
@@ -96,36 +111,36 @@ void AntennaSolve<T, M, N>::Standardize() {
     T n;
 
     // Standardize visibilities
-    auto sModelArray = Kokkos::mdspan(this->pModelArray.data(), N, N);
+    auto model_array = Kokkos::mdspan(this->model_array_.data(), N, N);
 
-    n = sModelArray.extent(0)*sModelArray.extent(1);
+    n = model_array.extent(0)*model_array.extent(1);
 
     // Calculate mean
-    for (std::size_t i = 0; i < sModelArray.extent(0); i++) {
-        for (std::size_t j = 0; j < sModelArray.extent(1); j++) {
-            mean += sModelArray[i, j];
+    for (std::size_t i = 0; i < model_array.extent(0); i++) {
+        for (std::size_t j = 0; j < model_array.extent(1); j++) {
+            mean += model_array[i, j];
         }
     }
 
     mean = mean/(n);
 
     // Calculate square root.
-    for (std::size_t i = 0; i < sModelArray.extent(0); i++) {
-        for (std::size_t j = 0; j < sModelArray.extent(1); j++) {
-            variance += power(sModelArray[i, j] - mean, 2);
+    for (std::size_t i = 0; i < model_array.extent(0); i++) {
+        for (std::size_t j = 0; j < model_array.extent(1); j++) {
+            variance += power(model_array[i, j] - mean, 2);
         }
     }
 
     stdev = sqrt(variance/(n));
 
     // Scale data
-    for (std::size_t i = 0; i < sModelArray.extent(0); i++) {
-        for (std::size_t j = 0; j < sModelArray.extent(1); j++) {
-            sModelArray[i, j] = (sModelArray[i, j] - mean)/stdev;
+    for (std::size_t i = 0; i < model_array.extent(0); i++) {
+        for (std::size_t j = 0; j < model_array.extent(1); j++) {
+            model_array[i, j] = (model_array[i, j] - mean)/stdev;
         }
     }
 }
-
+**/
 template <typename T, std::size_t M, std::size_t N>
 void AntennaSolve<T, M, N>::Transform(const char *mode) {
     // This function still needs some work. Both scaling functions
@@ -136,7 +151,8 @@ void AntennaSolve<T, M, N>::Transform(const char *mode) {
         this->Normalize();
     }
     else {
-        this->Standardize();
+        //this->Standardize();
+        return;
     }
 }
 
@@ -146,18 +162,18 @@ void AntennaSolve<T, M, N>::Loss() {
     std::complex<T> denominator;
 
     // Create Kokos::mdspan instances of matrices. Naming according to
-    // private array: pModelArray, mds instance: sModelArray
-    auto sModelArray = Kokkos::mdspan(this->pModelArray.data(), 10, 10);
-    auto sObservedArray = Kokkos::mdspan(this->pObservedArray.data(), 10, 10);
+    // private array: model_array_, mds instance: model_array
+    auto model_array = Kokkos::mdspan(this->model_array_.data(), 10, 10);
+    auto sObservedArray = Kokkos::mdspan(this->observed_array_.data(), 10, 10);
 
     // The weight here is set to be the same as in the example
     auto weight_vector = std::array<std::complex<T>, M> ();
     weight_vector.fill(std::complex<T> {400., 400.});
 
     // Create Kokkos::mdspan instance of weights.
-    auto weight_mdspan = Kokkos::mdspan(weight_vector.data(), sModelArray.extent(0), sModelArray.extent(1));
+    auto weight_mdspan = Kokkos::mdspan(weight_vector.data(), model_array.extent(0), model_array.extent(1));
 
-    this->loss = std::array<std::complex<T>, N> ();
+    this->loss_ = std::array<std::complex<T>, N> ();
 
     for(unsigned i = 0; i < sObservedArray.extent(0); i++) {
 
@@ -169,11 +185,11 @@ void AntennaSolve<T, M, N>::Loss() {
 
             if (i==j) continue;
 
-            numerator += sObservedArray[i, j]*this->pGainsArray[j] * conj(sModelArray[i, j]) * weight_mdspan[i, j];
-            denominator += conj(sModelArray[i, j]) * (sModelArray[i, j]) * conj(this->pGainsArray[j]) * (this->pGainsArray[j])  * weight_mdspan[i, j];
+            numerator += sObservedArray[i, j]*this->gains_array_[j] * conj(model_array[i, j]) * weight_mdspan[i, j];
+            denominator += conj(model_array[i, j]) * (model_array[i, j]) * conj(this->gains_array_[j]) * (this->gains_array_[j])  * weight_mdspan[i, j];
         }
 
-        this->loss[i] = (numerator/denominator) - this->pGainsArray[i];
+        this->loss_[i] = (numerator/denominator) - this->gains_array_[i];
     }
 }
 
@@ -194,8 +210,8 @@ void AntennaSolve<T, M, N>::Fit(unsigned n_batch, T alpha){
 }
 
 template<typename T, std::size_t M, std::size_t N>
-std::array <std::complex<T>, N> AntennaSolve<T, M, N>::GetGains(){
-    return this->pGainsArray;
+std::array <std::complex<T>, N> AntennaSolve<T, M, N>::get_gains(){
+    return this->gains_array_;
 }
 
 #endif //CALIBRATION_ANTENNASOLVE_H

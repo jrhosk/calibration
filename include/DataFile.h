@@ -1,6 +1,11 @@
+// ******************************************************************* //
 //
-// Created by jhoskins on 5/22/24.
+// Created by Joshua Hoskins (jhoskins@nrao.edu) 5/22/24.
 //
+//   Style guide:
+//             https://google.github.io/styleguide/cppguide.html
+//
+// ******************************************************************* //
 
 #ifndef DATAFILE_H
 #define DATAFILE_H
@@ -15,9 +20,9 @@
 class DataFile: private std::fstream {
 
 public:
-    std::unordered_map<std::string, std::vector<std::string>> dataframe;
+    std::unordered_map<std::string, std::vector<std::string>> dataframe_;
 
-    std::vector<std::string> pColumns;
+    std::vector<std::string> columns_;
 
     void ParseRow(char *, const char *);
     void ParseHeader(char *, const char *);
@@ -49,7 +54,7 @@ public:
         T value;
         std::vector<T> data;
 
-        for (auto & it : this->dataframe[column]) {
+        for (auto & it : this->dataframe_[column]) {
             const auto resp = std::from_chars(it.data(), it.data() + it.size(), value);
             data.push_back(value);
         }
@@ -66,7 +71,7 @@ public:
 
         std::vector<std::complex<T>> data;
 
-        for (auto & it : this->dataframe[column]) {
+        for (auto & it : this->dataframe_[column]) {
 
             auto z = DataFile::ConvertComplex(it);
 
@@ -87,7 +92,7 @@ public:
         int value;
         std::vector<int> data;
 
-        for (auto & it : this->dataframe[column]) {
+        for (auto & it : this->dataframe_[column]) {
             value = strtof(it.data(), nullptr);
 
             data.push_back(value);
@@ -105,7 +110,7 @@ public:
 
         std::vector<std::complex<float>> data;
 
-        for (auto & it : this->dataframe[column]) {
+        for (auto & it : this->dataframe_[column]) {
 
             auto z = DataFile::ConvertComplex(it);
 

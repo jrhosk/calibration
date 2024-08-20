@@ -55,7 +55,7 @@ int main(int argc, char *argv[]){
     std::cout << "Reading test csv" << std::endl;
 
     // Pull data from csv, add the directory to visibilities.csv
-    DataFile visfile = DataFile("/home/mystletainn/Development/c++/calibration/data/visibilities.csv", std::ios::in);
+    DataFile visfile = DataFile("<path-to-data>/visibilities.csv", std::ios::in);
     visfile.ReadCsv();
 
     // Data can be extracted and cast into most types
@@ -98,11 +98,11 @@ int main(int argc, char *argv[]){
     data::print(X);
 
     // Get the solutions to compare against. Add path to gains.csv if needed.
-    DataFile gainsfile = DataFile("/home/mystletainn/Development/c++/calibration/data/gains.csv", std::ios::in);
+    DataFile gainsfile = DataFile("<path-to-data>/gains.csv", std::ios::in);
     gainsfile.ReadCsv();
 
     std::vector<std::complex<double>> gains = gainsfile.GetColumn<double, std::complex>("gains");
 
-    for( unsigned i = 0; i < 10; i++) std::cout << std::left << std::setw(15) << "[calculated, truth]: " << abs(solver.GetGains()[i]) <<  "\t" << abs(gains[i]) << std::endl;
+    for( unsigned i = 0; i < 10; i++) std::cout << std::left << std::setw(15) << "[calculated, truth]: " << abs(solver.get_gains()[i]) <<  "\t" << abs(gains[i]) << std::endl;
 
 }
